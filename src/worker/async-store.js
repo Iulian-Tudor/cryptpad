@@ -2839,7 +2839,7 @@ const factory = (ApiConfig = {}, Sortify, UserObject, ProxyManager,
 
                 // Call onCacheReady if the manager is not yet defined
                 if (!manager) {
-                    onCacheReady(clientId, waitFor());
+                    startCacheModules(clientId, returned, waitFor());
                     manager = store.manager;
                     userObject = store.userObject;
                 }
@@ -3199,10 +3199,11 @@ const factory = (ApiConfig = {}, Sortify, UserObject, ProxyManager,
             andThen();
         };
 
-        const startCacheModules = (clientId, returned, cb) => {
+        const startCacheModules = (clientId, returned, _cb) => {
+            const cb = Util.mkAsync(_cb);
             onCacheReady(clientId, function () {
-                cb(returned);
                 onCacheReadyEvt.fire();
+                cb(returned);
             });
         };
         const startModules = (clientId, returned, cb) => {
@@ -3237,6 +3238,10 @@ const factory = (ApiConfig = {}, Sortify, UserObject, ProxyManager,
 
             const requires = data.requires;
 
+            // data.noDrive indicates that we can use drive-less
+            // mode. It will be false is we are loading a safe hash
+            const requiresDrive = !data.noDrive;
+
             // Mark initialized to true: new tabs will have to
             // wait for the entire worker to be ready
             initialized = true;
@@ -3253,7 +3258,7 @@ const factory = (ApiConfig = {}, Sortify, UserObject, ProxyManager,
 
             // Now users will create a drive, but they may not
             // own an account
-            if (requires === 'pad') {
+            if (requires === 'pad' && !requiresDrive) {
                 // Start with only the pad modules, callback
                 // and then load the account and other modules
                 return void onNoDrive(clientId, function (obj) {
@@ -3276,7 +3281,7 @@ const factory = (ApiConfig = {}, Sortify, UserObject, ProxyManager,
                     onPadRejectedEvt.reg(next);
                 });
             }
-            if (requires === 'file') {
+            if (requires === 'file' && !requiresDrive) {
                 // Start with only the pad modules, callback
                 // and then load the account and other modules
                 return void onNoDrive(clientId, function (obj) {

@@ -19,18 +19,8 @@ var factory = function (Util, Crypto, Keys, Nacl) {
             .decodeUTF8(JSON.stringify(list))));
     };
 
-    Hash.generateSignPair = function () {
-        var ed = Nacl.sign.keyPair();
-        var makeSafe = function (key) {
-            return Crypto.b64RemoveSlashes(key).replace(/=+$/g, '');
-        };
-        return {
-            validateKey: Hash.encodeBase64(ed.publicKey),
-            signKey: Hash.encodeBase64(ed.secretKey),
-            safeValidateKey: makeSafe(Hash.encodeBase64(ed.publicKey)),
-            safeSignKey: makeSafe(Hash.encodeBase64(ed.secretKey)),
-        };
-    };
+    // Using Crypto.Random.generateSignPair instead
+    Hash.generateSignPair = Crypto.Random.generateSignPair;
 
     Hash.getSignPublicFromPrivate = function (edPrivateSafeStr) {
         var edPrivateStr = Crypto.b64AddSlashes(edPrivateSafeStr);
@@ -116,13 +106,8 @@ var factory = function (Util, Crypto, Keys, Nacl) {
     };
 
     Hash.ephemeralChannelLength = 34;
-    Hash.createChannelId = function (ephemeral) {
-        var id = uint8ArrayToHex(Crypto.Nacl.randomBytes(ephemeral? 17: 16));
-        if ([32, 34].indexOf(id.length) === -1 || /[^a-f0-9]/.test(id)) {
-            throw new Error('channel ids must consist of 32 hex characters');
-        }
-        return id;
-    };
+    // Using Crypto.Random.createChannelId
+    Hash.createChannelId = Crypto.Random.createChannelId;
 
     /*  Given a base64-encoded public key, deterministically derive a channel id
         Used for support mailboxes
